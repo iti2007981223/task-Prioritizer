@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Task Prioritizer - Complete App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;700&family=Bitter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0F172A;
+            --secondary: #FF6B6B;
+            --accent: #4ECDC4;
+            --bg-main: #FAFBFC;
+            --bg-card: #FFFFFF;
+            --text-primary: #0F172A;
+            --text-secondary: #64748B;
+            --border: #E2E8F0;
+            --success: #10B981;
+            --gold: #FFD700;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Lexend', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text-primary);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-family: 'Bitter', serif;
+            font-size: 3rem;
+            margin-bottom: 12px;
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 14px 24px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            min-width: 150px;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: var(--primary);
+            border-color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+            margin-bottom: 24px;
+        }
+
+        .pomodoro-widget {
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 24px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            text-align: center;
+        }
+
+        .timer-display {
+            font-family: 'Bitter', serif;
+            font-size: 5rem;
+            font-weight: 700;
+            color: white;
+            margin: 20px 0;
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .timer-label {
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .timer-modes {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .mode-btn {
+            padding: 10px 24px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .mode-btn.active {
+            background: white;
+            color: var(--primary);
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 14px 32px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #3BA99C);
+            color: white;
+            box-shadow: 0 4px 12px rgba(78, 205, 196, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(78, 205, 196, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--primary);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(78, 205, 196, 0.1);
+        }
+
+        .inline-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .task-list {
+            margin-top: 24px;
+        }
+
+        .task-item {
+            background: var(--bg-main);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 2px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .task-item:hover {
+            border-color: var(--accent);
+            background: white;
+        }
+
+        .task-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .task-meta {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            font-size: 0.85rem;
+        }
+
+        .meta-tag {
+            padding: 4px 12px;
+            border-radius: 8px;
+            background: white;
+            font-weight: 500;
+        }
+
+        .meta-tag.high {
+            background: #FEE2E2;
+            color: #DC2626;
+        }
+
+        .meta-tag.medium {
+            background: #FEF3C7;
+            color: #D97706;
+        }
+
+        .meta-tag.low {
+            background: #DBEAFE;
+            color: #2563EB;
+        }
+
+        .btn-remove {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-left: 12px;
+        }
+
+        .priority-result {
+            margin-bottom: 24px;
+        }
+
+        .top-task {
+            background: linear-gradient(135deg, #FEF3C7 0%, #FCD34D 100%);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            border: 3px solid #F59E0B;
+        }
+
+        .priority-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: #F59E0B;
+            margin-right: 12px;
+        }
+
+        .rewards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .reward-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            border: 2px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .reward-card.locked {
+            opacity: 0.5;
+            filter: grayscale(0.8);
+        }
+
+        .reward-card.unlocking {
+            animation: unlockBadge 0.8s ease-out;
+        }
+
+        @keyframes unlockBadge {
+            0% { transform: scale(0.9); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .reward-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+
+        .reward-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .reward-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .badge-status {
+            margin-top: 8px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .reward-card .badge-status {
+            background: #D1FAE5;
+            color: #059669;
+        }
+
+        .reward-card.locked .badge-status {
+            background: #F1F5F9;
+            color: #64748B;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: var(--bg-main);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            border: 2px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .checklist-item:hover {
+            border-color: var(--accent);
+        }
+
+        .checklist-item.completed {
+            opacity: 0.6;
+            background: #D1FAE5;
+        }
+
+        .checkbox {
+            width: 28px;
+            height: 28px;
+            border: 3px solid var(--border);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .checklist-item.completed .checkbox {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-top: 4px;
+        }
+
+        .badge-notification {
+            background: linear-gradient(135deg, #FEF3C7, #FCD34D);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .timer-display {
+                font-size: 3.5rem;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+        }
+
+        .success-flash {
+            animation: successFlash 0.5s ease-out;
+        }
+
+        @keyframes successFlash {
+            0% { background-color: #D1FAE5; }
+            100% { background-color: transparent; }
+        }
+
+        .task-item {
+            animation: slideInTask 0.3s ease-out;
+        }
+
+        @keyframes slideInTask {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 AI Task Prioritizer</h1>
+            <p>Smart task management with Pomodoro timers and achievement tracking</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('input')">📝 Add Tasks</button>
+            <button class="tab-btn" onclick="showTab('prioritize')">🤖 Prioritize</button>
+            <button class="tab-btn" onclick="showTab('rewards')">🏆 Progress & Rewards</button>
+        </div>
+
+        <!-- TAB 1: TASK INPUT -->
+        <div id="tab-input" class="tab-content active">
+            <div class="pomodoro-widget">
+                <div class="timer-label" id="timerLabel">FOCUS TIME</div>
+                <div class="timer-display" id="timerDisplay">25:00</div>
+                
+                <div class="timer-modes">
+                    <button class="mode-btn active" onclick="setTimerMode('focus')">🍅 25m</button>
+                    <button class="mode-btn" onclick="setTimerMode('short')">☕ 5m</button>
+                    <button class="mode-btn" onclick="setTimerMode('long')">🌴 15m</button>
+                </div>
+
+                <div class="timer-controls">
+                    <button class="btn btn-primary" id="timerBtn" onclick="toggleTimer()">▶️ Start</button>
+                    <button class="btn btn-secondary" onclick="resetTimer()">⏹️ Reset</button>
+                </div>
+
+                <div class="stats-row" style="margin-top: 20px;">
+                    <div class="stat-card">
+                        <div class="stat-value" id="pomodorosToday">0</div>
+                        <div class="stat-label">Today</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="streakCount">0</div>
+                        <div class="stat-label">Streak</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 style="margin-bottom: 24px;">➕ Add New Task</h2>
+                
+                <div id="taskForm">
+                    <div class="input-group">
+                        <label>What do you need to do?</label>
+                        <input type="text" id="taskTitle" placeholder="e.g., Study for math test" onkeypress="if(event.key==='Enter') addTask()">
+                    </div>
+
+                    <div class="inline-inputs">
+                        <div class="input-group">
+                            <label>Deadline</label>
+                            <select id="deadline">
+                                <option value="none">No deadline</option>
+                                <option value="today">Today</option>
+                                <option value="tomorrow">Tomorrow</option>
+                                <option value="this-week">This week</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Effort</label>
+                            <select id="effort">
+                                <option value="short">Quick (&lt; 30 min)</option>
+                                <option value="medium" selected>Medium (30-90 min)</option>
+                                <option value="long">Long (&gt; 90 min)</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Importance</label>
+                            <select id="importance">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button onclick="addTask()" class="btn btn-primary" style="width: 100%; margin-top: 16px;">
+                        ➕ Add Task
+                    </button>
+                </div>
+
+                <div id="taskList" class="task-list"></div>
+            </div>
+        </div>
+
+        <!-- TAB 2: PRIORITIZATION -->
+        <div id="tab-prioritize" class="tab-content">
+            <div class="card">
+                <h2 style="margin-bottom: 20px;">🤖 AI Prioritization</h2>
+                
+                <div id="taskSummary"></div>
+                
+                <button class="btn btn-primary" onclick="prioritizeTasks()" style="width: 100%; margin: 20px 0;">
+                    ✨ Prioritize My Tasks
+                </button>
+
+                <div id="priorityResults"></div>
+            </div>
+        </div>
+
+        <!-- TAB 3: REWARDS -->
+        <div id="tab-rewards" class="tab-content">
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalTasks">0</div>
+                    <div class="stat-label">Total Tasks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="completedTasks">0</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalPoints">0</div>
+                    <div class="stat-label">Points</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 style="margin-bottom: 20px;">✅ Your Tasks</h2>
+                <div id="checklistTasks"></div>
+            </div>
+
+            <div class="card">
+                <div class="badge-notification" id="badgeNotif">🎉 New Badge Unlocked!</div>
+                <h2 style="margin-bottom: 20px;">🏆 Achievement Badges</h2>
+                <div class="rewards-grid" id="badgesGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== STATE ==========
+        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        let prioritizedTasks = JSON.parse(localStorage.getItem('prioritizedTasks')) || [];
+        let completedIds = JSON.parse(localStorage.getItem('completedIds')) || [];
+        let userStats = JSON.parse(localStorage.getItem('userStats')) || {
+            points: 0,
+            pomodorosToday: 0,
+            streak: 0,
+            badges: []
+        };
+
+        let timerState = {
+            mode: 'focus',
+            timeLeft: 25 * 60,
+            isRunning: false,
+            interval: null
+        };
+
+        const BADGES = [
+            { id: 'first-task', icon: '✨', title: 'First Step', desc: 'Complete your first task', check: () => completedIds.length >= 1 },
+            { id: 'task-master', icon: '🎯', title: 'Task Master', desc: 'Add 5 tasks', check: () => tasks.length >= 5 },
+            { id: 'day-conqueror', icon: '🌟', title: 'Day Conqueror', desc: 'Complete 3 tasks', check: () => completedIds.length >= 3 },
+            { id: 'focus-beginner', icon: '🍅', title: 'Focus Beginner', desc: 'Complete 1 Pomodoro', check: () => userStats.pomodorosToday >= 1 },
+            { id: 'focus-warrior', icon: '🥷', title: 'Focus Warrior', desc: 'Complete 5 Pomodoros', check: () => userStats.pomodorosToday >= 5 },
+            { id: 'streak-3', icon: '🔥', title: 'On Fire', desc: '3-day streak', check: () => userStats.streak >= 3 },
+            { id: 'high-priority', icon: '⚡', title: 'Priority Master', desc: 'Complete a high priority task', check: () => checkHighPriority() },
+            { id: 'speed-demon', icon: '💨', title: 'Speed Demon', desc: 'Complete 5 tasks in one session', check: () => completedIds.length >= 5 },
+            { id: 'organized', icon: '📊', title: 'Super Organized', desc: 'Add 10 tasks', check: () => tasks.length >= 10 },
+            { id: 'points-100', icon: '💯', title: 'Century', desc: 'Earn 100 points', check: () => userStats.points >= 100 },
+            { id: 'points-500', icon: '🏅', title: 'Champion', desc: 'Earn 500 points', check: () => userStats.points >= 500 },
+            { id: 'unstoppable', icon: '👑', title: 'Unstoppable', desc: 'Complete all tasks', check: () => tasks.length > 0 && completedIds.length === prioritizedTasks.length }
+        ];
+
+        // ========== TIMER FUNCTIONS ==========
+        function setTimerMode(mode) {
+            if (timerState.isRunning) return;
+            
+            const modes = { focus: 25 * 60, short: 5 * 60, long: 15 * 60 };
+            const labels = { focus: 'FOCUS TIME', short: 'SHORT BREAK', long: 'LONG BREAK' };
+            
+            timerState.mode = mode;
+            timerState.timeLeft = modes[mode];
+            
+            // Update button styles
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to clicked button
+            const modeButtons = document.querySelectorAll('.mode-btn');
+            if (mode === 'focus') modeButtons[0].classList.add('active');
+            else if (mode === 'short') modeButtons[1].classList.add('active');
+            else if (mode === 'long') modeButtons[2].classList.add('active');
+            
+            document.getElementById('timerLabel').textContent = labels[mode];
+            updateTimerDisplay();
+        }
+
+        function toggleTimer() {
+            if (timerState.isRunning) {
+                clearInterval(timerState.interval);
+                timerState.isRunning = false;
+                document.getElementById('timerBtn').textContent = '▶️ Start';
+            } else {
+                timerState.isRunning = true;
+                document.getElementById('timerBtn').textContent = '⏸️ Pause';
+                
+                timerState.interval = setInterval(() => {
+                    timerState.timeLeft--;
+                    
+                    if (timerState.timeLeft <= 0) {
+                        completeTimer();
+                    }
+                    
+                    updateTimerDisplay();
+                }, 1000);
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timerState.interval);
+            timerState.isRunning = false;
+            const modes = { focus: 25 * 60, short: 5 * 60, long: 15 * 60 };
+            timerState.timeLeft = modes[timerState.mode];
+            document.getElementById('timerBtn').textContent = '▶️ Start';
+            updateTimerDisplay();
+        }
+
+        function completeTimer() {
+            clearInterval(timerState.interval);
+            timerState.isRunning = false;
+            
+            if (timerState.mode === 'focus') {
+                userStats.pomodorosToday++;
+                userStats.points += 25;
+                saveStats();
+            }
+            
+            alert('🎉 Timer complete! ' + (timerState.mode === 'focus' ? 'Time for a break!' : 'Ready to focus?'));
+            
+            resetTimer();
+            updateStats();
+            checkBadges();
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(timerState.timeLeft / 60);
+            const secs = timerState.timeLeft % 60;
+            document.getElementById('timerDisplay').textContent = 
+                `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // ========== TASK FUNCTIONS ==========
+        function addTask() {
+            const titleInput = document.getElementById('taskTitle');
+            const title = titleInput.value.trim();
+            
+            if (!title) {
+                alert('Please enter a task title!');
+                return;
+            }
+            
+            const task = {
+                id: Date.now(),
+                title: title,
+                deadline: document.getElementById('deadline').value,
+                effort: document.getElementById('effort').value,
+                importance: document.getElementById('importance').value
+            };
+            
+            tasks.push(task);
+            saveTasks();
+            renderTasks();
+            
+            // Clear form
+            titleInput.value = '';
+            document.getElementById('deadline').value = 'none';
+            document.getElementById('effort').value = 'medium';
+            document.getElementById('importance').value = 'medium';
+            
+            userStats.points += 5;
+            saveStats();
+            updateStats();
+            checkBadges();
+            
+            // Show success feedback
+            titleInput.style.borderColor = '#10B981';
+            setTimeout(() => {
+                titleInput.style.borderColor = '';
+            }, 500);
+        }
+
+        function removeTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            saveTasks();
+            renderTasks();
+        }
+
+        function renderTasks() {
+            const list = document.getElementById('taskList');
+            
+            if (tasks.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: var(--text-secondary); margin-top: 20px;">No tasks yet. Add your first task above! 📝</p>';
+                return;
+            }
+            
+            list.innerHTML = '<div style="margin-bottom: 12px; color: var(--text-primary);"><strong>Your Tasks (' + tasks.length + '):</strong></div>' + 
+                tasks.map(task => `
+                <div class="task-item">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div style="flex: 1;">
+                            <div class="task-title">${escapeHtml(task.title)}</div>
+                            <div class="task-meta">
+                                ${task.deadline !== 'none' ? `<span class="meta-tag">⏰ ${formatDeadline(task.deadline)}</span>` : ''}
+                                <span class="meta-tag">⏱️ ${formatEffort(task.effort)}</span>
+                                <span class="meta-tag ${task.importance}">${task.importance} priority</span>
+                            </div>
+                        </div>
+                        <button class="btn-remove" onclick="removeTask(${task.id})" title="Remove task">×</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            updateTaskSummary();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDeadline(deadline) {
+            const map = {
+                'today': 'Today',
+                'tomorrow': 'Tomorrow',
+                'this-week': 'This week',
+                'next-week': 'Next week'
+            };
+            return map[deadline] || deadline;
+        }
+
+        function formatEffort(effort) {
+            const map = {
+                'short': 'Quick',
+                'medium': 'Medium',
+                'long': 'Long'
+            };
+            return map[effort] || effort;
+        }
+
+        function updateTaskSummary() {
+            const summary = document.getElementById('taskSummary');
+            if (tasks.length === 0) {
+                summary.innerHTML = '<p style="color: var(--text-secondary);">No tasks to prioritize. Add some tasks first!</p>';
+            } else {
+                summary.innerHTML = `<p>You have <strong>${tasks.length} task(s)</strong> ready to prioritize.</p>`;
+            }
+        }
+
+        function prioritizeTasks() {
+            if (tasks.length === 0) {
+                alert('Please add some tasks first!');
+                return;
+            }
+
+            // Calculate priority scores
+            const scored = tasks.map(task => {
+                const urgency = { today: 10, tomorrow: 8, 'this-week': 6, none: 2 }[task.deadline] || 2;
+                const importance = { high: 10, medium: 6, low: 3 }[task.importance];
+                const effort = { short: 8, medium: 5, long: 3 }[task.effort];
+                
+                return {
+                    ...task,
+                    score: (urgency * 0.4) + (importance * 0.4) + (effort * 0.2)
+                };
+            });
+
+            scored.sort((a, b) => b.score - a.score);
+            prioritizedTasks = scored;
+            localStorage.setItem('prioritizedTasks', JSON.stringify(prioritizedTasks));
+
+            renderPrioritizedTasks();
+            renderChecklist();
+            userStats.points += 10;
+            saveStats();
+            checkBadges();
+        }
+
+        function renderPrioritizedTasks() {
+            const results = document.getElementById('priorityResults');
+            
+            if (prioritizedTasks.length === 0) {
+                results.innerHTML = '';
+                return;
+            }
+
+            const top3 = prioritizedTasks.slice(0, 3);
+            const rest = prioritizedTasks.slice(3);
+
+            let html = '<div class="priority-result"><h3 style="margin-bottom: 16px;">🌟 Top 3 Tasks</h3>';
+            
+            top3.forEach((task, i) => {
+                html += `
+                    <div class="top-task">
+                        <span class="priority-number">${i + 1}</span>
+                        <strong>${task.title}</strong>
+                        <p style="margin-top: 8px; color: var(--text-secondary);">
+                            ${getExplanation(task)}
+                        </p>
+                    </div>
+                `;
+            });
+
+            if (rest.length > 0) {
+                html += '<h3 style="margin: 24px 0 16px;">📝 Remaining Tasks</h3>';
+                rest.forEach((task, i) => {
+                    html += `
+                        <div class="task-item">
+                            <span class="priority-number" style="background: var(--bg-main); color: var(--text-secondary);">${i + 4}</span>
+                            <strong>${task.title}</strong>
+                        </div>
+                    `;
+                });
+            }
+
+            html += '</div>';
+            results.innerHTML = html;
+        }
+
+        function getExplanation(task) {
+            if (task.deadline === 'today') return 'Due today - tackle this immediately!';
+            if (task.deadline === 'tomorrow') return 'Due tomorrow - needs focus soon.';
+            if (task.importance === 'high') return 'High priority with significant impact.';
+            if (task.effort === 'short') return 'Quick win to build momentum!';
+            return 'Important task for your progress.';
+        }
+
+        // ========== CHECKLIST & REWARDS ==========
+        function renderChecklist() {
+            const checklist = document.getElementById('checklistTasks');
+            
+            if (prioritizedTasks.length === 0) {
+                checklist.innerHTML = '<p style="color: var(--text-secondary);">Prioritize your tasks first!</p>';
+                return;
+            }
+
+            checklist.innerHTML = prioritizedTasks.map((task, i) => {
+                const completed = completedIds.includes(task.id);
+                return `
+                    <div class="checklist-item ${completed ? 'completed' : ''}" onclick="toggleComplete(${task.id})">
+                        <div class="checkbox">${completed ? '✓' : ''}</div>
+                        <div style="flex: 1;">
+                            <div><strong>${i < 3 ? '⭐ ' : ''}${task.title}</strong></div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">
+                                Priority #${i + 1}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleComplete(id) {
+            const index = completedIds.indexOf(id);
+            
+            if (index > -1) {
+                completedIds.splice(index, 1);
+                userStats.points -= 10;
+            } else {
+                completedIds.push(id);
+                userStats.points += 10;
+                
+                // Check if it's a high priority task
+                const task = tasks.find(t => t.id === id);
+                if (task && task.importance === 'high') {
+                    userStats.points += 15;
+                }
+            }
+            
+            saveCompletedIds();
+            saveStats();
+            renderChecklist();
+            updateStats();
+            checkBadges();
+        }
+
+        function renderBadges() {
+            const grid = document.getElementById('badgesGrid');
+            
+            grid.innerHTML = BADGES.map(badge => {
+                const unlocked = userStats.badges.includes(badge.id);
+                return `
+                    <div class="reward-card ${unlocked ? '' : 'locked'}">
+                        <div class="reward-icon">${badge.icon}</div>
+                        <div class="reward-title">${badge.title}</div>
+                        <div class="reward-desc">${badge.desc}</div>
+                        <div class="badge-status">${unlocked ? '✅ Unlocked' : '🔒 Locked'}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function checkBadges() {
+            BADGES.forEach(badge => {
+                if (!userStats.badges.includes(badge.id) && badge.check()) {
+                    unlockBadge(badge);
+                }
+            });
+        }
+
+        function unlockBadge(badge) {
+            userStats.badges.push(badge.id);
+            userStats.points += 50;
+            saveStats();
+            
+            const notif = document.getElementById('badgeNotif');
+            notif.textContent = `🎉 New Badge: ${badge.title}!`;
+            notif.style.display = 'block';
+            
+            setTimeout(() => {
+                notif.style.display = 'none';
+            }, 3000);
+            
+            renderBadges();
+            updateStats();
+        }
+
+        function checkHighPriority() {
+            return completedIds.some(id => {
+                const task = tasks.find(t => t.id === id);
+                return task && task.importance === 'high';
+            });
+        }
+
+        // ========== UI & STATS ==========
+        function showTab(tab) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            
+            // Remove active from all buttons
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            
+            // Add active to correct button
+            const buttons = document.querySelectorAll('.tab-btn');
+            if (tab === 'input') buttons[0].classList.add('active');
+            else if (tab === 'prioritize') buttons[1].classList.add('active');
+            else if (tab === 'rewards') buttons[2].classList.add('active');
+            
+            // Update content when switching tabs
+            if (tab === 'prioritize') updateTaskSummary();
+            if (tab === 'rewards') {
+                renderChecklist();
+                renderBadges();
+                updateStats();
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('pomodorosToday').textContent = userStats.pomodorosToday;
+            document.getElementById('streakCount').textContent = userStats.streak;
+            document.getElementById('totalTasks').textContent = tasks.length;
+            document.getElementById('completedTasks').textContent = completedIds.length;
+            document.getElementById('totalPoints').textContent = userStats.points;
+        }
+
+        function saveTasks() {
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        function saveCompletedIds() {
+            localStorage.setItem('completedIds', JSON.stringify(completedIds));
+        }
+
+        function saveStats() {
+            localStorage.setItem('userStats', JSON.stringify(userStats));
+        }
+
+        // ========== INITIALIZATION ==========
+        renderTasks();
+        renderChecklist();
+        renderBadges();
+        updateStats();
+        updateTimerDisplay();
+    </script>
+</body>
+</html>
